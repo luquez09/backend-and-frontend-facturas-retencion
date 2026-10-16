@@ -1,4 +1,5 @@
 # backend-facturas-retencion
+
 La Gerencia de Evolución Contable y Tributaria recibe mensualmente un archivo con facturas de proveedores y otro con los registros contabilizados. Actualmente, un analista cruza ambos archivos de forma manual para identificar diferencias en valores, impuestos, retenciones y estados de contabilización.
 
 ## Ejecución local
@@ -59,12 +60,13 @@ Con la API en ejecución, configura una solicitud con estos datos:
 2. Abre la pestaña **Body** y selecciona **form-data**.
 3. Agrega los siguientes campos. Para ambos, cambia el tipo de `Text` a `File` y selecciona el archivo correspondiente:
 
-   | Key | Type | Valor |
-   | --- | --- | --- |
+   | Key                | Type   | Valor                   |
+   | ------------------ | ------ | ----------------------- |
    | `fileContabilidad` | `File` | Archivo de contabilidad |
-   | `fileFactura` | `File` | Archivo de facturas |
+   | `fileFactura`      | `File` | Archivo de facturas     |
 
    Los nombres de las keys deben escribirse exactamente como se muestran. No los envíes como `Text`: el endpoint los recibe como archivos (`UploadFile`) mediante un formulario `multipart/form-data`.
+
 4. Presiona **Send** para enviar la solicitud.
 
 Postman configura automáticamente el encabezado `Content-Type` adecuado al seleccionar **form-data**. No lo agregues manualmente, ya que debe incluir el separador (`boundary`) del formulario.
