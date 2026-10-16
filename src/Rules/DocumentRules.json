@@ -1,0 +1,48 @@
+{
+  "fileContabilidad": {
+    "columnas_requeridas": [
+      "id_factura",
+      "fecha_contabilizacion",
+      "cuenta_contable",
+      "centro_costo",
+      "valor_debito",
+      "valor_credito",
+      "estado"
+    ],
+    "tipos_dato_requeridos": {
+      "id_factura": "str",
+      "fecha_contabilizacion": "date",
+      "cuenta_contable": "int64",
+      "centro_costo": "str",
+      "valor_debito": "float64",
+      "valor_credito": "float64",
+      "estado": "str"
+    }
+  },
+  "fileFactura": {
+    "columnas_requeridas": [
+      "id_factura",
+      "nit_proveedor",
+      "fecha_factura",
+      "concepto",
+      "base_gravable",
+      "tarifa_iva",
+      "valor_iva",
+      "tarifa_retencion",
+      "valor_retencion",
+      "total_factura"
+    ],
+    "tipos_dato_requeridos": {
+      "id_factura": "str",
+      "nit_proveedor": "str",
+      "fecha_factura": "date",
+      "concepto": "str",
+      "base_gravable": "float64",
+      "tarifa_iva": "float64",
+      "valor_iva": "float64",
+      "tarifa_retencion": "float64",
+      "valor_retencion": "float64",
+      "total_factura": "float64"
+    }
+  }
+}
