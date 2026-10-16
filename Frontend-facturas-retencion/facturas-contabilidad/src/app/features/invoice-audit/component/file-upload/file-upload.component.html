@@ -1,16 +1,47 @@
-<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-  <h2 class="text-lg font-semibold text-slate-800 mb-2">Carga y Procesamiento de Facturas</h2>
-  <p class="text-sm text-slate-500 mb-4">Sube tus archivos de facturación (JSON/XML/Excel) para ejecutar la auditoría automática DIAN.</p>
+<section class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 transition-all duration-200">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        <div>
+            <h2 class="text-base font-semibold text-slate-900">Cargar Documentos de Facturación</h2>
+            <p class="text-xs text-slate-500">Nombramiento de archivo: factura_opcional_opcinal.csv /
+                contabilidad_opcional_opcinal.csv</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="btnProcess" onclick="processFiles()"
+                class="px-4 py-2 bg-brand-600 hover:bg-brand-700 active:bg-brand-700 text-white text-sm font-medium rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2">
+                <i data-lucide="play" class="w-4 h-4"></i>
+                Ejecutar Procesamiento
+            </button>
+        </div>
+    </div>
 
-  <div class="flex flex-col md:flex-row items-center gap-4">
-    <input type="file" (change)="onFileSelected($event)" accept=".json,.xml,.xlsx" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"/>
-    
-    <button 
-      (click)="executeProcess()"
-      [disabled]="!selectedFile() || (isLoading$ | async)"
-      class="w-full md:w-auto px-6 py-2.5 bg-slate-900 text-white font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-all flex items-center justify-center gap-2">
-      <span *ngIf="(isLoading$ | async)" class="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
-      {{ (isLoading$ | async) ? 'Procesando...' : 'Ejecutar Auditoría' }}
-    </button>
-  </div>
-</div>
+    <div id="dropZone"
+        class="border-2 border-dashed border-slate-200 hover:border-brand-500 hover:bg-brand-50/30 rounded-xl p-6 text-center cursor-pointer transition-all duration-200 group relative">
+        <input type="file" id="fileInput" accept=".json,.xml,.xlsx,.pdf"
+            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" multiple onchange="handleFileSelect(event)">
+        <div class="flex flex-col items-center justify-center space-y-2">
+            <div
+                class="p-3 bg-slate-50 group-hover:bg-brand-100/50 rounded-full text-slate-400 group-hover:text-brand-600 transition-colors">
+                <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+            </div>
+            <div class="text-sm text-slate-600">
+                <span class="font-medium text-brand-600">Haz clic para subir</span> o arrastra y suelta tus archivos
+                aquí
+            </div>
+            <p class="text-xs text-slate-400">Archivos CSV o TXT (MAX 1MB)</p>
+            <div id="selectedFiles" class="text-xs text-slate-600 font-medium hidden pt-2"></div>
+        </div>
+    </div>
+
+    <div id="processingLoader" class="hidden mt-4 space-y-2">
+        <div class="flex justify-between text-xs text-slate-600 font-medium">
+            <span id="loaderStatusText" class="flex items-center gap-2">
+                <i data-lucide="loader-2" class="w-4 h-4 animate-spin text-brand-600"></i>
+                Validando estructura de JSON y cruzando bases gravables...
+            </span>
+            <span id="loaderPercent">0%</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+            <div id="progressBar" class="bg-brand-600 h-2 rounded-full w-0 transition-all duration-300"></div>
+        </div>
+    </div>
+</section>

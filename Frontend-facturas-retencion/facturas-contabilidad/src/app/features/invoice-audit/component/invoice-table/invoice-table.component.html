@@ -1,0 +1,68 @@
+<section class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+
+  <div class="p-5 border-b border-slate-200/80 space-y-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <h3 class="text-base font-semibold text-slate-900">Resultados de la Auditoría</h3>
+        <p class="text-xs text-slate-500">Lista detallada de facturas validadas frente a la norma tributaria.</p>
+      </div>
+
+
+      <div class="relative w-full sm:w-72">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="searchInput" oninput="applyFilters()" placeholder="Buscar por ID, NIT o Concepto..."
+          class="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all">
+      </div>
+    </div>
+
+
+    <div class="flex flex-wrap gap-2 pt-1 border-t border-slate-100" id="filterTabs">
+      <button onclick="setFilter('ALL')" data-filter="ALL"
+        class="tab-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-900 text-white transition-colors">Todas
+        (<span id="countAll">0</span>)</button>
+      <button onclick="setFilter('CORRECT')" data-filter="CORRECT"
+        class="tab-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Correctas
+        (<span id="countCorrect">0</span>)</button>
+      <button onclick="setFilter('ERROR')" data-filter="ERROR"
+        class="tab-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Con
+        Inconsistencia (<span id="countError">0</span>)</button>
+      <button onclick="setFilter('NO_REG')" data-filter="NO_REG"
+        class="tab-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Sin
+        Reg. Contable (<span id="countNoReg">0</span>)</button>
+      <button onclick="setFilter('DUPLICATED')" data-filter="DUPLICATED"
+        class="tab-btn px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Duplicadas
+        (<span id="countDuplicated">0</span>)</button>
+    </div>
+  </div>
+
+
+  <div class="overflow-x-auto">
+    <table class="w-full text-left text-xs">
+      <thead class="bg-slate-50/70 border-b border-slate-200/80 text-slate-500 font-medium">
+        <tr>
+          <th class="py-3 px-4">ID Factura</th>
+          <th class="py-3 px-4">NIT Proveedor</th>
+          <th class="py-3 px-4">Fecha</th>
+          <th class="py-3 px-4">Concepto</th>
+          <th class="py-3 px-4 text-right">Base Gravable</th>
+          <th class="py-3 px-4 text-right">IVA (Reportado / Esperado)</th>
+          <th class="py-3 px-4 text-right">Total (Reportado / Esperado)</th>
+          <th class="py-3 px-4">Estado</th>
+          <th class="py-3 px-4 text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="invoiceTableBody" class="divide-y divide-slate-100">
+
+      </tbody>
+    </table>
+  </div>
+
+
+  <div
+    class="p-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+    <div id="paginationInfo">Mostrando 0 de 0 resultados</div>
+    <div class="flex items-center space-x-2" id="paginationControls">
+
+    </div>
+  </div>
+</section>
