@@ -23,7 +23,6 @@ class CSVValidator:
         errors.extend(structure_errors)
 
         if errors:
-            print(f"Errores de estructura encontrados en {file_key}: {structure_errors}")
             return errors
 
         type_errors = self.ValidateTypeDataFile(df, file_key)
@@ -31,35 +30,58 @@ class CSVValidator:
 
         return errors
 
-
     def ValidateStructureFile(self, df: pd.DataFrame, file_key: str) -> list:
         errors = []
 
         print(f"Validando estructura de {file_key}...")
-        print(f"Columnas actuales: {list(df.columns)}")
 
         file_config = self.rules.get(file_key, {})
         required_columns = file_config.get("columnas_requeridas", [])
-        
-        # Obtener las columnas actuales del DataFrame como una lista ordenada
-        current_columns = list(df.columns)
-        
-        print(f"Columnas actuales (ordenadas): {current_columns}")
-        print(f"Columnas requeridas (ordenadas): {required_columns}")
 
-        # 1. Validar si falta alguna columna en general
-        missing_cols = [col for col in required_columns if col not in current_columns]
+        if df.empty and len(df.columns) == 0:
+            errors.append(f"El archivo {file_key} no contiene columnas.")
+            return errors
+
+        current_columns = list(df.columns)
+
+        missing_cols = [
+            col for col in required_columns
+            if col not in current_columns
+        ]
+
         if missing_cols:
-            errors.append(f"Faltan columnas requeridas en {file_key}: {missing_cols}")
-            
-        # 2. (Opcional) Validar si el orden es estrictamente el mismo
-        elif current_columns != required_columns:
             errors.append(
-                f"Las columnas de {file_key} están completas, pero **no tienen el orden correcto**. "
-                f"Orden esperado: {required_columns}"
+                f"Faltan columnas requeridas en {file_key}: {missing_cols}"
             )
-            
+
+            return errors
+
+        if current_columns != required_columns:
+            errors.append(
+                f"Las columnas de {file_key} no tienen el orden correcto. "
+                f"Orden esperado: {required_columns}. "
+                f"Orden actual: {current_columns}."
+            )
+
+        required_data = df[required_columns]
+
+        missing_values = (
+            required_data.isna() | required_data.astype("string").apply(
+                lambda col: col.str.strip().eq("")
+            )
+        )
+        
+        rows, cols = missing_values.to_numpy().nonzero()
+
+        for row, col in zip(rows, cols):
+            column_name = required_columns[col]
+            errors.append(
+                f"Fila {df.index[row]}: la columna '{column_name}' "
+                f"no tiene un valor válido."
+            )
+
         return errors
+
 
     def ValidateTypeDataFile(self, df: pd.DataFrame, file_key: str) -> List[str]:
         errors = []
@@ -79,7 +101,7 @@ class CSVValidator:
                 actual_type = str(df[column_name].dtype)
                 print(f"DEBUG -> Columna '{column_name}' en {file_key}: tipo actual '{actual_type}', se esperaba '{expected_type}'")    
                 is_match = False
-                if "float" in expected_type.lower() or "int" in expected_type.lower():
+                if "float64" in expected_type.lower() or "int64" in expected_type.lower():
                     is_match = pd.api.types.is_numeric_dtype(df[column_name])
                 elif expected_type.lower() == "str":
                     is_match = actual_type in ["object", "string", "str"]
