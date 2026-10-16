@@ -1,35 +1,130 @@
-import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
 import { InvoiceService } from '../../../../core/services/invoice.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-file-upload',
   standalone: true,
   imports: [CommonModule],
   templateUrl: './file-upload.component.html',
-  styleUrl: './file-upload.component.css'
 })
-
 export class FileUploadComponent {
-  invoiceService = inject(InvoiceService);
-  selectedFile = signal<File | null>(null);
+  private invoiceService = inject(InvoiceService);
 
-  isLoading$ = this.invoiceService.isLoading$;
+  archivoFacturas = signal<File | null>(null);
+  archivoContable = signal<File | null>(null);
 
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedFile.set(input.files[0]);
+  errorMessage = signal<string | null>(null);
+  successMessage = signal<string | null>(null);
+  isLoading = signal(false);
+
+  private validarArchivo(
+    file: File | null,
+    prefijo: 'facturas' | 'contabilidad',
+  ): string | null {
+    if (!file) {
+      return 'Debes seleccionar el archivo.';
     }
+
+    const nombre = file.name.toLowerCase();
+
+    if (!nombre.startsWith(prefijo)) {
+      return `El archivo debe comenzar con "${prefijo}".`;
+    }
+
+    if (!nombre.endsWith('.csv')) {
+      return 'Solo se permiten archivos con extensión .csv.';
+    }
+
+    if (file.size === 0) {
+      return 'El archivo está vacío.';
+    }
+
+    return null;
   }
 
-  executeProcess() {
-    const file = this.selectedFile();
-    if (!file) return;
+  onFacturasSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
 
-    this.invoiceService.uploadAndProcess(file).subscribe({
-      next: () => console.log('Procesado con éxito'),
-      error: (err) => console.error('Error al procesar:', err)
-    });
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    const error = this.validarArchivo(file, 'facturas');
+
+    if (error) {
+      this.archivoFacturas.set(null);
+      input.value = '';
+      this.errorMessage.set(`Archivo de facturas: ${error}`);
+      return;
+    }
+
+    this.archivoFacturas.set(file);
+  }
+
+  onContableSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+
+    const error = this.validarArchivo(file, 'contabilidad');
+
+    if (error) {
+      this.archivoContable.set(null);
+      input.value = '';
+      this.errorMessage.set(`Archivo contable: ${error}`);
+      return;
+    }
+
+    this.archivoContable.set(file);
+  }
+
+  executeProcess(): void {
+    const facturas = this.archivoFacturas();
+    const contabilidad = this.archivoContable();
+
+    const errorFacturas = this.validarArchivo(facturas, 'facturas');
+    const errorContabilidad = this.validarArchivo(contabilidad, 'contabilidad');
+
+    if (errorFacturas || errorContabilidad) {
+      this.errorMessage.set(
+        errorFacturas
+          ? `Archivo de facturas: ${errorFacturas}`
+          : `Archivo contable: ${errorContabilidad}`,
+      );
+      return;
+    }
+
+    // Las validaciones anteriores garantizan que ambos archivos existen.
+    if (!facturas || !contabilidad) return;
+
+    this.errorMessage.set(null);
+    this.successMessage.set(null);
+    this.isLoading.set(true);
+
+    this.invoiceService
+      .uploadAndProcess(facturas, contabilidad)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (response) => {
+          if (response.status === 'success') {
+            this.successMessage.set(
+              response.message || 'Archivos procesados correctamente.',
+            );
+          } else {
+            this.errorMessage.set(
+              response.message || 'No fue posible procesar los archivos.',
+            );
+          }
+        },
+        error: (error: Error) => {
+          this.errorMessage.set(
+            error.message || 'Error al enviar los archivos.',
+          );
+        },
+      });
   }
 }

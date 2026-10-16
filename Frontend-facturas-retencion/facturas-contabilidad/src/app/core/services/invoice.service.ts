@@ -72,7 +72,7 @@ export class InvoiceService {
     );
   }
 
-  uploadAndProcess(file: File): Observable<ApiResponseFacturas> {
+  uploadAndProcess(file: File, contableFile: File): Observable<ApiResponseFacturas> {
     this.isLoadingSubject.next(true);
     this.errorMessageSubject.next(null);
 
