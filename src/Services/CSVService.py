@@ -1,10 +1,13 @@
 import io
+from pickle import loads
 import traceback
 import pandas as pd
 from fastapi import UploadFile
 from src.Services.Utils.CSVValidator import CSVValidator
+from src.Services.Utils.CSVValidatorRules import CSVValidatorRules
 
 validator = CSVValidator()
+validator_rules = CSVValidatorRules()
 
 class CSVServices:
     @staticmethod
@@ -36,9 +39,18 @@ class CSVServices:
                     "errorsFactura": errors_factura
                 }
 
+            df_factura = validator_rules.CalCulateIva(df_factura)
+            df_factura = validator_rules.ValidateTotalFactura(df_factura)
+            df_factura = validator_rules.ValidateFacturaDuplicada(df_factura)
+            df_factura = validator_rules.FacturaSinRegistroContable(df_factura, df_contabilidad)
+            df_factura = validator_rules.FacturaCorrecta(df_factura)
+
+            print(df_factura.to_dict(orient="records"))
+
             return {
                 "status": "success",
-                "message": "Los documentos se procesaron y validaron exitosamente."
+                "message": "Los documentos se procesaron y validaron exitosamente.",
+                "dataFactura": df_factura.to_dict(orient="records")
             }
 
         except Exception as e:
