@@ -98,7 +98,6 @@ export class FileUploadComponent {
       return;
     }
 
-    // Las validaciones anteriores garantizan que ambos archivos existen.
     if (!facturas || !contabilidad) return;
 
     this.errorMessage.set(null);

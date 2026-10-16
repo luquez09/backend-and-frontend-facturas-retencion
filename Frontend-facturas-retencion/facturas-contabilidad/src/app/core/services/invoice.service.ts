@@ -72,14 +72,16 @@ export class InvoiceService {
     );
   }
 
-  uploadAndProcess(file: File, contableFile: File): Observable<ApiResponseFacturas> {
+  uploadAndProcess(fileFactura: File, contableFile: File): Observable<ApiResponseFacturas> {
     this.isLoadingSubject.next(true);
     this.errorMessageSubject.next(null);
 
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('fileFactura', fileFactura);
+    formData.append('fileContabilidad', contableFile);
 
-    return this.http.post<ApiResponseFacturas>(`${this.apiUrl}/procesar`, formData).pipe(
+    return this.http.post<ApiResponseFacturas>(`${this.apiUrl}`, formData)
+    .pipe(
       tap((response) => {
         if (response.status === 'success') {
           this.facturasSubject.next(response.dataFactura);
