@@ -6,7 +6,7 @@ class CSVValidatorRules:
 
     print("Iniciando calculo de IVA")
     def CalCulateIva(self, df_factura: pd.DataFrame) -> pd.DataFrame:
-        df_factura['ivaEsperado'] = df_factura['base_gravable'] * (df_factura['tarifa_iva'])
+        df_factura['ivaEsperado'] = df_factura['base_gravable'] * 0.19
         return df_factura
 
     print("Iniciando validación de total de factura.")
@@ -48,8 +48,7 @@ class CSVValidatorRules:
             else:
                 df_factura.at[index, "FacturaCorrecta"] = False
                 df_factura.at[index, "FacturaError"] = (
-                    "Errores: "
-                    + ("Total incorrecto. " if not total_correcto else "")
+                      ("Total incorrecto. " if not total_correcto else "")
                     + ("IVA incorrecto. " if not iva_correcto else "")
                     + ("Factura duplicada. " if not no_duplicada else "")
                     + ("Sin registro contable. " if not registro_correcto else "")
