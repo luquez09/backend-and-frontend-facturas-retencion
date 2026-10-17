@@ -11,7 +11,7 @@ class CSVValidatorRules:
 
     print("Iniciando validación de total de factura.")
     def ValidateTotalFactura(self, df_factura: pd.DataFrame) -> pd.DataFrame:
-        df_factura['totalEsperado'] = df_factura['base_gravable'] + df_factura['ivaEsperado'] - df_factura['valor_retencion']
+        df_factura['totalEsperado'] = df_factura['base_gravable'] + df_factura['ivaEsperado'] - df_factura['tarifa_retencion']
         return df_factura
 
     print("Iniciando validación de factura duplicada.")

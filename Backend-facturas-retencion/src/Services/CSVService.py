@@ -36,7 +36,8 @@ class CSVServices:
                 return {
                     "status": "validation_failed",
                     "errorsContabilidad": errors_contabilidad,
-                    "errorsFactura": errors_factura
+                    "errorsFactura": errors_factura,
+                    "message" : all_errors
                 }
 
             df_factura = validator_rules.CalCulateIva(df_factura)

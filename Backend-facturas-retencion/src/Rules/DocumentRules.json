@@ -34,7 +34,7 @@
     ],
     "tipos_dato_requeridos": {
       "id_factura": "str",
-      "nit_proveedor": "float64",
+      "nit_proveedor": "str",
       "fecha_factura": "date",
       "concepto": "str",
       "base_gravable": "float64",

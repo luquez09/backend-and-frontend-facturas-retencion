@@ -31,6 +31,8 @@ class CSVValidator:
         return errors
 
     def ValidateStructureFile(self, df: pd.DataFrame, file_key: str) -> list:
+
+        
         errors = []
 
         print(f"Validando estructura de {file_key}...")
@@ -38,6 +40,7 @@ class CSVValidator:
         file_config = self.rules.get(file_key, {})
         required_columns = file_config.get("columnas_requeridas", [])
 
+        # Validar que el archivo tenga estructura
         if df.empty and len(df.columns) == 0:
             errors.append(f"El archivo {file_key} no contiene columnas.")
             return errors
@@ -53,8 +56,24 @@ class CSVValidator:
             errors.append(
                 f"Faltan columnas requeridas en {file_key}: {missing_cols}"
             )
-
             return errors
+
+        for col in required_columns:
+            missing_mask = (
+                df[col].isna()
+                | df[col].astype("string").str.strip().eq("").fillna(False)
+            )
+
+            missing_rows = df.index[missing_mask]
+
+            for idx in missing_rows:
+                excel_row = idx + 2 if isinstance(idx, int) else idx
+
+                errors.append(
+                    f"Registro faltante en {file_key}: "
+                    f"fila {excel_row}, columna '{col}'."
+                )
+
 
         if current_columns != required_columns:
             errors.append(
@@ -95,27 +114,50 @@ class CSVValidator:
 
         print(f"Validando tipos de dato de {file_key}. Tipos esperados: {column_types}")
         
+        
         for column_name, expected_type in column_types.items():
-            if column_name in df.columns:
+            if column_name not in df.columns:
+                continue
+
+            expected = expected_type.strip().lower()
+            actual_type = str(df[column_name].dtype)
+
+            series = df[column_name]
+
+            if expected in ("float64", "float", "int64", "int", "numeric", "number"):
+                is_match = pd.api.types.is_numeric_dtype(series)
+
+            elif expected in ("str", "string", "object"):
+                is_match = (
+                    pd.api.types.is_string_dtype(series)
+                    or pd.api.types.is_object_dtype(series)
+                )
+
+            elif expected in ("date", "datetime", "datetime64"):
+                parsed_dates = pd.to_datetime(series, errors="coerce")
                 
-                actual_type = str(df[column_name].dtype)
-                print(f"DEBUG -> Columna '{column_name}' en {file_key}: tipo actual '{actual_type}', se esperaba '{expected_type}'")    
-                is_match = False
-                if "float64" in expected_type.lower() or "int64" in expected_type.lower():
-                    is_match = pd.api.types.is_numeric_dtype(df[column_name])
-                elif expected_type.lower() == "str":
-                    is_match = actual_type in ["object", "string", "str"]
-                elif expected_type.lower() == "date":
-                    print(f"DEBUG -> Validando columna '{column_name}' en {file_key}: tipo actual '{actual_type}', se esperaba 'date'")
-                    is_match = pd.to_datetime(df[column_name], errors='coerce').notna().all()
-                    print(f"DEBUG -> Columna '{column_name}' en {file_key}: tipo actual '{actual_type}', se esperaba 'date', es fecha: {is_match}")
-                else:
-                    is_match = (actual_type == expected_type)
+                non_empty = series.notna() & series.astype(str).str.strip().ne("")
+
+                invalid_dates = non_empty & parsed_dates.isna()
+                is_match = not invalid_dates.any()
 
                 if not is_match:
+                    rows = (df.index[invalid_dates] + 2).tolist()
                     errors.append(
-                        f"Columna '{column_name}' en {file_key} tiene tipo de dato incorrecto. "
-                        f"Se esperaba '{expected_type}', pero se encontró '{actual_type}'."
+                        f"Columna '{column_name}' en {file_key} contiene "
+                        f"fechas inválidas en las filas: {rows}."
                     )
+                    continue
+
+            else:
+                is_match = actual_type == expected_type
+
+            if not is_match:
+                errors.append(
+                    f"Columna '{column_name}' en {file_key} tiene tipo "
+                    f"de dato incorrecto. Se esperaba '{expected_type}', "
+                    f"pero se encontró '{actual_type}'."
+                )
+
 
         return errors
