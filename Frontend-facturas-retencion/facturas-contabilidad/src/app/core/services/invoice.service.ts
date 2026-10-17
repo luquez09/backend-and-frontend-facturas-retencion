@@ -11,21 +11,18 @@ export class InvoiceService {
   private http = inject(HttpClient);
   private apiUrl = 'http://127.0.0.1:8000/csv/upload';
 
-  // BehaviorSubjects para el estado reactivo
   private facturasSubject = new BehaviorSubject<Factura[]>([]);
   private isLoadingSubject = new BehaviorSubject<boolean>(false);
   private errorMessageSubject = new BehaviorSubject<string | null>(null);
   private filterStatusSubject = new BehaviorSubject<StatusFilter>('ALL');
   private searchTermSubject = new BehaviorSubject<string>('');
 
-  // Observables públicos para consumir en componentes
   facturas$ = this.facturasSubject.asObservable();
   isLoading$ = this.isLoadingSubject.asObservable();
   errorMessage$ = this.errorMessageSubject.asObservable();
   filterStatus$ = this.filterStatusSubject.asObservable();
   searchTerm$ = this.searchTermSubject.asObservable();
   
-  // Métricas calculadas reactivamente
   metrics$ = this.facturas$.pipe(
     map(list => ({
       total: list.length,
@@ -36,7 +33,6 @@ export class InvoiceService {
     }))
   );
 
-  // Lista filtrada combinando datos, estado y búsqueda
   filteredFacturas$: Observable<Factura[]>;
 
   constructor() {
@@ -49,16 +45,24 @@ export class InvoiceService {
         let result = [...facturas];
         const searchTerm = search.toLowerCase().trim();
 
-        // 1. Aplicar filtro por estado
-        if (filter === 'CORRECT') {
+        switch (filter) {
+        case 'CORRECT':
           result = result.filter(f => f.FacturaCorrecta);
-        } else if (filter === 'ERROR') {
-          result = result.filter(f => !f.FacturaCorrecta);
-        } else if (filter === 'NO_RECORD') {
-          result = result.filter(f => !f.RegistroContable);
-        }
+          break;
 
-        // 2. Aplicar filtro por término de búsqueda
+        case 'ERROR':
+          result = result.filter(f => !f.FacturaCorrecta);
+          break;
+
+        case 'NO_RECORD':
+          result = result.filter(f => !f.RegistroContable);
+          break;
+
+        case 'DUPLICATED':
+          result = result.filter(f => f.facturaDuplicada);
+          break;
+      }
+
         if (searchTerm) {
           result = result.filter(f =>
             f.id_factura.toLowerCase().includes(searchTerm) ||
@@ -66,7 +70,6 @@ export class InvoiceService {
             f.concepto.toLowerCase().includes(searchTerm)
           );
         }
-
         return result;
       })
     );
@@ -83,6 +86,7 @@ export class InvoiceService {
     return this.http.post<ApiResponseFacturas>(`${this.apiUrl}`, formData)
     .pipe(
       tap((response) => {
+        console.log('Respuesta de la API:', response);
         if (response.status === 'success') {
           this.facturasSubject.next(response.dataFactura);
         } else {

@@ -23,4 +23,4 @@ export interface ApiResponseFacturas {
   dataFactura: Factura[];
 }
 
-export type StatusFilter = 'ALL' | 'CORRECT' | 'ERROR' | 'NO_RECORD';
+export type StatusFilter =  'ALL' | 'CORRECT' | 'ERROR' | 'NO_RECORD' | 'DUPLICATED';

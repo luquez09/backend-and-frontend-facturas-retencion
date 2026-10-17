@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { InvoiceService } from '../../../../core/services/invoice.service';
 import { finalize } from 'rxjs/operators';
+
+import { InvoiceService } from '../../../../core/services/invoice.service';
 
 @Component({
   selector: 'app-file-upload',
@@ -10,14 +11,16 @@ import { finalize } from 'rxjs/operators';
   templateUrl: './file-upload.component.html',
 })
 export class FileUploadComponent {
-  private invoiceService = inject(InvoiceService);
+  private readonly invoiceService = inject(InvoiceService);
 
-  archivoFacturas = signal<File | null>(null);
-  archivoContable = signal<File | null>(null);
+  readonly archivoFacturas = signal<File | null>(null);
+  readonly archivoContable = signal<File | null>(null);
 
-  errorMessage = signal<string | null>(null);
-  successMessage = signal<string | null>(null);
-  isLoading = signal(false);
+  readonly errorMessage = signal<string | null>(null);
+  readonly successMessage = signal<string | null>(null);
+  readonly isLoading = signal(false);
+
+  private readonly MAX_FILE_SIZE = 1024 * 1024; // 1 MB
 
   private validarArchivo(
     file: File | null,
@@ -39,6 +42,10 @@ export class FileUploadComponent {
 
     if (file.size === 0) {
       return 'El archivo está vacío.';
+    }
+
+    if (file.size > this.MAX_FILE_SIZE) {
+      return 'El archivo supera el tamaño máximo permitido de 1 MB.';
     }
 
     return null;
@@ -83,11 +90,18 @@ export class FileUploadComponent {
   }
 
   executeProcess(): void {
+    if (this.isLoading()) {
+      return;
+    }
+
     const facturas = this.archivoFacturas();
     const contabilidad = this.archivoContable();
 
     const errorFacturas = this.validarArchivo(facturas, 'facturas');
-    const errorContabilidad = this.validarArchivo(contabilidad, 'contabilidad');
+    const errorContabilidad = this.validarArchivo(
+      contabilidad,
+      'contabilidad',
+    );
 
     if (errorFacturas || errorContabilidad) {
       this.errorMessage.set(
@@ -95,10 +109,13 @@ export class FileUploadComponent {
           ? `Archivo de facturas: ${errorFacturas}`
           : `Archivo contable: ${errorContabilidad}`,
       );
+      this.successMessage.set(null);
       return;
     }
 
-    if (!facturas || !contabilidad) return;
+    if (!facturas || !contabilidad) {
+      return;
+    }
 
     this.errorMessage.set(null);
     this.successMessage.set(null);
@@ -119,10 +136,14 @@ export class FileUploadComponent {
             );
           }
         },
-        error: (error: Error) => {
-          this.errorMessage.set(
-            error.message || 'Error al enviar los archivos.',
-          );
+        error: (error: unknown) => {
+          const mensaje =
+            error instanceof Error
+              ? error.message
+              : 'Error al enviar los archivos. Verifica la conexión con el servidor.';
+
+          this.errorMessage.set(mensaje);
+          this.successMessage.set(null);
         },
       });
   }
